@@ -1,4 +1,4 @@
-package com.example.TiliShopBE.dto;
+package com.example.TiliShopBE.model.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;

@@ -1,6 +1,6 @@
 package com.example.TiliShopBE.repository;
 
-import com.example.TiliShopBE.model.FishSauce;
+import com.example.TiliShopBE.entity.FishSauce;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

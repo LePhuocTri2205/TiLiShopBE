@@ -1,95 +1,55 @@
 package com.example.TiliShopBE.controller;
 
-import com.example.TiliShopBE.dto.LoginRequest;
-import com.example.TiliShopBE.dto.SignupRequest;
-import com.example.TiliShopBE.model.User;
-import com.example.TiliShopBE.repository.UserRepository;
-import com.example.TiliShopBE.util.JwtUtil;
+import com.example.TiliShopBE.entity.Account;
+import com.example.TiliShopBE.model.request.LoginRequest;
+import com.example.TiliShopBE.model.request.SignupRequest;
+import com.example.TiliShopBE.service.AuthenticationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/auth")
+//@RequestMapping("/api/auth")
 public class AuthenticationController {
 
     @Autowired
-    private UserRepository userRepository;
+    AuthenticationService authenticationService;
 
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @PostMapping("/signup")
-    public ResponseEntity<?> signup(@Valid @RequestBody SignupRequest signupRequest) {
-        // Check if email already exists
-        if (userRepository.existsByEmail(signupRequest.getEmail())) {
-            return ResponseEntity.badRequest()
-                    .body(new ErrorResponse("Email is already registered"));
-        }
-
-        // Check if username already exists
-        if (userRepository.existsByUsername(signupRequest.getUsername())) {
-            return ResponseEntity.badRequest()
-                    .body(new ErrorResponse("Username is already taken"));
-        }
-
-        // Create new user
-        User newUser = new User();
-        newUser.setEmail(signupRequest.getEmail());
-        newUser.setUsername(signupRequest.getUsername());
-        newUser.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
-        newUser.setFullName(signupRequest.getFullName());
-        newUser.setPhone(signupRequest.getPhone());
-
-        User savedUser = userRepository.save(newUser);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "User registered successfully");
-        response.put("userId", savedUser.getId());
-        response.put("username", savedUser.getUsername());
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    @PostMapping("/api/account")
+    public ResponseEntity register(@Valid @RequestBody Account account) {
+        Account newAccount = authenticationService.register(account);
+        return ResponseEntity.ok(newAccount);
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
-        // Find user by email or username
-        User user = userRepository.findByEmail(loginRequest.getEmailOrUsername())
-                .orElseGet(() -> userRepository.findByUsername(loginRequest.getEmailOrUsername())
-                        .orElse(null));
-
-        if (user == null) {
-            return ResponseEntity.badRequest()
-                    .body(new ErrorResponse("Invalid email/username or password"));
-        }
-
-        // Check password
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            return ResponseEntity.badRequest()
-                    .body(new ErrorResponse("Invalid email/username or password"));
-        }
-
-        // Generate JWT token
-        String token = jwtUtil.generateToken(user.getUsername());
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "Login successful");
-        response.put("token", token);
-        response.put("userId", user.getId());
-        response.put("username", user.getUsername());
-        response.put("email", user.getEmail());
-
-        return ResponseEntity.ok(response);
+    @GetMapping("/api/account")
+    public ResponseEntity getAllAccount() {
+        return  ResponseEntity.ok(authenticationService.getAllAccount());
     }
+
+//    @PostMapping("/signup")
+//    public ResponseEntity<?> signup(@Valid @RequestBody SignupRequest signupRequest) {
+//        try {
+//            Map<String, Object> response = authenticationService.signup(signupRequest);
+//            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+//        } catch (IllegalArgumentException e) {
+//            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+//        }
+//    }
+//
+//    @PostMapping("/login")
+//    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
+//        try {
+//            Map<String, Object> response = authenticationService.login(loginRequest);
+//            return ResponseEntity.ok(response);
+//        } catch (IllegalArgumentException e) {
+//            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+//        }
+//    }
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {

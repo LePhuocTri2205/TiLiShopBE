@@ -1,4 +1,4 @@
-package com.example.TiliShopBE.model;
+package com.example.TiliShopBE.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;

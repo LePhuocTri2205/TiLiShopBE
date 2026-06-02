@@ -1,7 +1,7 @@
 package com.example.TiliShopBE.controller;
 
-import com.example.TiliShopBE.model.RicePaper;
-import com.example.TiliShopBE.repository.RicePaperRepository;
+import com.example.TiliShopBE.entity.RicePaper;
+import com.example.TiliShopBE.service.RicePaperService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -9,60 +9,45 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/rice-papers")
 public class RicePaperController {
 
     @Autowired
-    private RicePaperRepository ricePaperRepository;
+    private RicePaperService ricePaperService;
 
     @GetMapping
     public ResponseEntity<List<RicePaper>> getAllRicePapers() {
-        List<RicePaper> ricePapers = ricePaperRepository.findAll();
-        return ResponseEntity.ok(ricePapers);
+        return ResponseEntity.ok(ricePaperService.getAll());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<RicePaper> getRicePaperById(@PathVariable Long id) {
-        Optional<RicePaper> ricePaper = ricePaperRepository.findById(id);
-        if (ricePaper.isPresent()) {
-            return ResponseEntity.ok(ricePaper.get());
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        return ricePaperService.getById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     public ResponseEntity<RicePaper> createRicePaper(@Valid @RequestBody RicePaper ricePaper) {
-        RicePaper savedRicePaper = ricePaperRepository.save(ricePaper);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedRicePaper);
+        RicePaper saved = ricePaperService.create(ricePaper);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<RicePaper> updateRicePaper(@PathVariable Long id, @Valid @RequestBody RicePaper ricePaperDetails) {
-        Optional<RicePaper> ricePaper = ricePaperRepository.findById(id);
-        if (ricePaper.isPresent()) {
-            RicePaper updatedRicePaper = ricePaper.get();
-            updatedRicePaper.setName(ricePaperDetails.getName());
-            updatedRicePaper.setDescription(ricePaperDetails.getDescription());
-            updatedRicePaper.setPrice(ricePaperDetails.getPrice());
-            RicePaper savedRicePaper = ricePaperRepository.save(updatedRicePaper);
-            return ResponseEntity.ok(savedRicePaper);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<RicePaper> updateRicePaper(@PathVariable Long id,
+                                                      @Valid @RequestBody RicePaper details) {
+        return ricePaperService.update(id, details)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRicePaper(@PathVariable Long id) {
-        Optional<RicePaper> ricePaper = ricePaperRepository.findById(id);
-        if (ricePaper.isPresent()) {
-            ricePaperRepository.deleteById(id);
+        if (ricePaperService.delete(id)) {
             return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
         }
+        return ResponseEntity.notFound().build();
     }
 }
