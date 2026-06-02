@@ -1,20 +1,14 @@
 package com.example.TiliShopBE.model.request;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Data
 public class LoginRequest {
 
-    @NotBlank(message = "Email or username is required")
-    private String emailOrUsername;
+    @NotBlank(message = "Username is required")
+    String username;
 
     @NotBlank(message = "Password is required")
-    private String password;
+    String password;
 }

@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SignupRequest {
+public class RegisterRequest {
 
     @NotBlank(message = "Email is required")
     @Email(message = "Email should be valid")

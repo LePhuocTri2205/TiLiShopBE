@@ -2,11 +2,9 @@ package com.example.TiliShopBE.controller;
 
 import com.example.TiliShopBE.entity.Account;
 import com.example.TiliShopBE.model.request.LoginRequest;
-import com.example.TiliShopBE.model.request.SignupRequest;
 import com.example.TiliShopBE.service.AuthenticationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +22,12 @@ public class AuthenticationController {
     public ResponseEntity register(@Valid @RequestBody Account account) {
         Account newAccount = authenticationService.register(account);
         return ResponseEntity.ok(newAccount);
+    }
+
+    @PostMapping("/api/login")
+    public ResponseEntity login(@Valid @RequestBody LoginRequest loginRequest) {
+        Account account = authenticationService.login(loginRequest);
+        return ResponseEntity.ok(account);
     }
 
     @GetMapping("/api/account")
