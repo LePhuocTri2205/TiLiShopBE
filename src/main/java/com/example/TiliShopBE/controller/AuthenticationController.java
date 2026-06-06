@@ -2,16 +2,20 @@ package com.example.TiliShopBE.controller;
 
 import com.example.TiliShopBE.entity.Account;
 import com.example.TiliShopBE.model.request.LoginRequest;
+import com.example.TiliShopBE.model.response.AccountResponse;
 import com.example.TiliShopBE.service.AuthenticationService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
+@SecurityRequirement(name = "api")
 //@RequestMapping("/api/auth")
 public class AuthenticationController {
 
@@ -26,34 +30,19 @@ public class AuthenticationController {
 
     @PostMapping("/api/login")
     public ResponseEntity login(@Valid @RequestBody LoginRequest loginRequest) {
-        Account account = authenticationService.login(loginRequest);
+        AccountResponse account = authenticationService.login(loginRequest);
         return ResponseEntity.ok(account);
     }
 
     @GetMapping("/api/account")
     public ResponseEntity getAllAccount() {
-        return  ResponseEntity.ok(authenticationService.getAllAccount());
+        return ResponseEntity.ok(authenticationService.getAllAccount());
     }
 
-//    @PostMapping("/signup")
-//    public ResponseEntity<?> signup(@Valid @RequestBody SignupRequest signupRequest) {
-//        try {
-//            Map<String, Object> response = authenticationService.signup(signupRequest);
-//            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
-//        }
-//    }
-//
-//    @PostMapping("/login")
-//    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
-//        try {
-//            Map<String, Object> response = authenticationService.login(loginRequest);
-//            return ResponseEntity.ok(response);
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
-//        }
-//    }
+    @GetMapping("/api/account/current")
+    public ResponseEntity getCurrentAccount() {
+        return ResponseEntity.ok(authenticationService.getCurrentAccount());
+    }
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {

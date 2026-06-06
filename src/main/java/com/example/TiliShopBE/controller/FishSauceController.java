@@ -2,6 +2,7 @@ package com.example.TiliShopBE.controller;
 
 import com.example.TiliShopBE.entity.FishSauce;
 import com.example.TiliShopBE.service.FishSauceService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@SecurityRequirement(name = "api")
 @RequestMapping("/api/fish-sauce")
 public class FishSauceController {
 

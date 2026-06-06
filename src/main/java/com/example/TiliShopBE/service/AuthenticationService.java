@@ -2,11 +2,14 @@ package com.example.TiliShopBE.service;
 
 import com.example.TiliShopBE.entity.Account;
 import com.example.TiliShopBE.model.request.LoginRequest;
+import com.example.TiliShopBE.model.response.AccountResponse;
 import com.example.TiliShopBE.repository.AuthenticationRepository;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -26,6 +29,11 @@ public class AuthenticationService implements UserDetailsService {
     @Autowired
     PasswordEncoder passwordEncoder;
 
+    @Autowired
+    ModelMapper modelMapper;
+    @Autowired
+    private TokenService tokenService;
+
     public Account register(Account account) {
         //xử lý đăng ký tài khoản
         account.setPassword(passwordEncoder.encode(account.getPassword()));
@@ -34,7 +42,7 @@ public class AuthenticationService implements UserDetailsService {
         return authenticationRepository.save(account);
     }
 
-    public Account login(LoginRequest loginRequest) {
+    public AccountResponse login(LoginRequest loginRequest) {
             // Xác thực người dùng
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -43,7 +51,12 @@ public class AuthenticationService implements UserDetailsService {
                     )
             );
             Account account = (Account) authentication.getPrincipal();
-            return account;
+            //Account => AccountResponse
+            //map
+            AccountResponse accountResponse = modelMapper.map(account, AccountResponse.class);
+            String token = tokenService.generateToken(account);
+            accountResponse.setToken(token);
+            return accountResponse;
     }
 
     public List<Account> getAllAccount() {
@@ -53,6 +66,10 @@ public class AuthenticationService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String phone) throws UsernameNotFoundException {
-            return authenticationRepository.findByUsername(phone);
+            return authenticationRepository.findAccountByPhone(phone);
+    }
+
+    public Account getCurrentAccount() {
+        return (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 }
