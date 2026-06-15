@@ -1,7 +1,7 @@
 package com.example.TiliShopBE.controller;
 
-import com.example.TiliShopBE.entity.Account;
 import com.example.TiliShopBE.model.request.LoginRequest;
+import com.example.TiliShopBE.model.request.RegisterRequest;
 import com.example.TiliShopBE.model.response.AccountResponse;
 import com.example.TiliShopBE.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -16,55 +16,45 @@ import java.util.Map;
 
 @RestController
 @SecurityRequirement(name = "api")
-//@RequestMapping("/api/auth")
 public class AuthenticationController {
 
     @Autowired
     AuthenticationService authenticationService;
 
-    @PostMapping("/api/account")
-    public ResponseEntity register(@Valid @RequestBody Account account) {
-        Account newAccount = authenticationService.register(account);
-        return ResponseEntity.ok(newAccount);
+    /**
+     * Đăng ký tài khoản mới.
+     * Body: { "phoneNumber": "0901234567", "password": "...", "fullName": "...", "email": "..." }
+     */
+    @PostMapping("/api/register")
+    public ResponseEntity<AccountResponse> register(@Valid @RequestBody RegisterRequest request) {
+        AccountResponse response = authenticationService.register(request);
+        return ResponseEntity.ok(response);
     }
 
+    /**
+     * Đăng nhập bằng số điện thoại + mật khẩu.
+     * Body: { "phoneNumber": "0901234567", "password": "..." }
+     */
     @PostMapping("/api/login")
-    public ResponseEntity login(@Valid @RequestBody LoginRequest loginRequest) {
-        AccountResponse account = authenticationService.login(loginRequest);
-        return ResponseEntity.ok(account);
+    public ResponseEntity<AccountResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+        AccountResponse response = authenticationService.login(loginRequest);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/api/account")
-    public ResponseEntity getAllAccount() {
+    public ResponseEntity<List<AccountResponse>> getAllAccount() {
         return ResponseEntity.ok(authenticationService.getAllAccount());
     }
 
     @GetMapping("/api/account/current")
-    public ResponseEntity getCurrentAccount() {
+    public ResponseEntity<AccountResponse> getCurrentAccount() {
         return ResponseEntity.ok(authenticationService.getCurrentAccount());
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
+    public ResponseEntity<Map<String, String>> logout() {
         Map<String, String> response = new HashMap<>();
-        response.put("message", "Logged out successfully");
+        response.put("message", "Đăng xuất thành công");
         return ResponseEntity.ok(response);
-    }
-
-    // Helper class for error responses
-    public static class ErrorResponse {
-        private String error;
-
-        public ErrorResponse(String error) {
-            this.error = error;
-        }
-
-        public String getError() {
-            return error;
-        }
-
-        public void setError(String error) {
-            this.error = error;
-        }
     }
 }

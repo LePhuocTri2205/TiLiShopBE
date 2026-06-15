@@ -1,14 +1,16 @@
 package com.example.TiliShopBE.model.request;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.*;
+import jakarta.validation.constraints.Pattern;
+import lombok.Data;
 
 @Data
 public class LoginRequest {
 
-    @NotBlank(message = "Username is required")
-    String username;
+    @NotBlank(message = "Số điện thoại không được để trống")
+    @Pattern(regexp = "^(0|\\+84)[3|5|7|8|9][0-9]{8}$", message = "Số điện thoại không hợp lệ")
+    private String phoneNumber;
 
-    @NotBlank(message = "Password is required")
-    String password;
+    @NotBlank(message = "Mật khẩu không được để trống")
+    private String password;
 }

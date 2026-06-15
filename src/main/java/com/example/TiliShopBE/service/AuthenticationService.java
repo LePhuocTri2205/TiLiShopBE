@@ -2,6 +2,7 @@ package com.example.TiliShopBE.service;
 
 import com.example.TiliShopBE.entity.Account;
 import com.example.TiliShopBE.model.request.LoginRequest;
+import com.example.TiliShopBE.model.request.RegisterRequest;
 import com.example.TiliShopBE.model.response.AccountResponse;
 import com.example.TiliShopBE.repository.AuthenticationRepository;
 import org.modelmapper.ModelMapper;
@@ -20,6 +21,7 @@ import java.util.List;
 
 @Service
 public class AuthenticationService implements UserDetailsService {
+
     @Autowired
     AuthenticationRepository authenticationRepository;
 
@@ -31,45 +33,71 @@ public class AuthenticationService implements UserDetailsService {
 
     @Autowired
     ModelMapper modelMapper;
+
     @Autowired
-    private TokenService tokenService;
+    TokenService tokenService;
 
-    public Account register(Account account) {
-        //xử lý đăng ký tài khoản
-        account.setPassword(passwordEncoder.encode(account.getPassword()));
+    /**
+     * Đăng ký tài khoản mới bằng RegisterRequest.
+     * Kiểm tra trùng số điện thoại trước khi lưu.
+     */
+    public AccountResponse register(RegisterRequest request) {
+        if (authenticationRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+            throw new IllegalArgumentException("Số điện thoại đã được đăng ký. Vui lòng dùng số khác.");
+        }
 
-        // Lưu tài khoản vào cơ sở dữ liệu
-        return authenticationRepository.save(account);
+        Account account = new Account();
+        account.setPhoneNumber(request.getPhoneNumber());
+        account.setEmail(request.getEmail());
+        account.setFullName(request.getFullName());
+        account.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        Account saved = authenticationRepository.save(account);
+        AccountResponse response = modelMapper.map(saved, AccountResponse.class);
+        response.setToken(tokenService.generateToken(saved));
+        return response;
     }
 
+    /**
+     * Đăng nhập bằng số điện thoại + mật khẩu.
+     * UsernamePasswordAuthenticationToken nhận phoneNumber làm "username"
+     * vì Account.getUsername() trả về phoneNumber.
+     */
     public AccountResponse login(LoginRequest loginRequest) {
-            // Xác thực người dùng
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginRequest.getUsername(),
-                            loginRequest.getPassword()
-                    )
-            );
-            Account account = (Account) authentication.getPrincipal();
-            //Account => AccountResponse
-            //map
-            AccountResponse accountResponse = modelMapper.map(account, AccountResponse.class);
-            String token = tokenService.generateToken(account);
-            accountResponse.setToken(token);
-            return accountResponse;
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getPhoneNumber(),
+                        loginRequest.getPassword()
+                )
+        );
+        Account account = (Account) authentication.getPrincipal();
+        AccountResponse accountResponse = modelMapper.map(account, AccountResponse.class);
+        accountResponse.setToken(tokenService.generateToken(account));
+        return accountResponse;
     }
 
-    public List<Account> getAllAccount() {
+    public List<AccountResponse> getAllAccount() {
         List<Account> accounts = authenticationRepository.findAll();
-        return accounts;
+        return accounts.stream()
+                .map(account -> modelMapper.map(account, AccountResponse.class))
+                .toList();
     }
 
+    /**
+     * Spring Security gọi method này để load UserDetails khi xác thực.
+     * Tham số "username" ở đây thực chất là phoneNumber.
+     */
     @Override
-    public UserDetails loadUserByUsername(String phone) throws UsernameNotFoundException {
-            return authenticationRepository.findAccountByPhone(phone);
+    public UserDetails loadUserByUsername(String phoneNumber) throws UsernameNotFoundException {
+        Account account = authenticationRepository.findAccountByPhoneNumber(phoneNumber);
+        if (account == null) {
+            throw new UsernameNotFoundException("Không tìm thấy tài khoản với số điện thoại: " + phoneNumber);
+        }
+        return account;
     }
 
-    public Account getCurrentAccount() {
-        return (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public AccountResponse getCurrentAccount() {
+        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return modelMapper.map(account, AccountResponse.class);
     }
 }

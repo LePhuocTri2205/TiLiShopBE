@@ -11,11 +11,12 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.function.Function;
 
 @Service
 public class TokenService {
 
-    private final String SECRET_KEY = "hackhotao1234567890hackhotao1234567890hackhotao1234567890hackhotao1234567890"; // Should be at least 256 bits for HS256
+    private final String SECRET_KEY = "hackhotao1234567890hackhotao1234567890hackhotao1234567890hackhotao1234567890";
 
     @Autowired
     AuthenticationRepository authenticationRepository;
@@ -25,19 +26,24 @@ public class TokenService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    /**
+     * Tạo JWT với subject là phoneNumber (định danh duy nhất).
+     */
     public String generateToken(Account account) {
         return Jwts.builder()
-                .subject(account.getId() + "") // Use account ID as the subject
+                .subject(account.getPhoneNumber())        // Subject = phoneNumber
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))// Token valid for 10 hours
+                .expiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 10)) // 10 giờ
                 .signWith(getSignInKey())
                 .compact();
     }
 
+    /**
+     * Giải mã JWT, lấy phoneNumber từ subject, tìm Account trong DB.
+     */
     public Account extractToken(String token) {
-        String value = extractClaim(token,Claims::getSubject);
-        long id = Long.parseLong(value);
-        return authenticationRepository.findAccountById(id);
+        String phoneNumber = extractClaim(token, Claims::getSubject);
+        return authenticationRepository.findAccountByPhoneNumber(phoneNumber);
     }
 
     public Claims extractAllClaims(String token) {
@@ -48,9 +54,8 @@ public class TokenService {
                 .getPayload();
     }
 
-    public <T> T extractClaim(String token, java.util.function.Function<Claims, T> resolver) {
+    public <T> T extractClaim(String token, Function<Claims, T> resolver) {
         Claims claims = extractAllClaims(token);
         return resolver.apply(claims);
     }
 }
-
